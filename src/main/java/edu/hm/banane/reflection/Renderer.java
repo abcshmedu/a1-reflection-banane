@@ -3,16 +3,35 @@ package edu.hm.banane.reflection;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 
+/**
+ * Die Render Klasse gibt mittels Reflection alle
+ * Instanzvariablen eines Objektes aus, welche mit
+ * der RenderMe-Annotation bezeichnet worden sind.
+ */
 public class Renderer {
+    /**
+     * Das Objekt, dessen Instanzvariablen ausgegeben werden sollen.
+     */
     private Object o;
 
-	public Renderer(Object object) {
+    /**
+     * Erzeugt einen neuen Renderer.
+     *
+     * @param object Das Objekt, dessen Instanzvariablen ausgegeben werden sollen.
+     */
+    public Renderer(Object object) {
         this.o = object;
     }
 
+    /**
+     * Erzeugt einen String mit Name (Typ) Wert von allen Instanzvariblen eines Objektes,
+     * welche mit RenderMe gekennzeichnet worden sind.
+     *
+     * @return String.
+     */
     public String render() {
-        Class<?> c = o.getClass();
-        Field[] fields = c.getDeclaredFields();
+        final Class<?> c = o.getClass();
+        final Field[] fields = c.getDeclaredFields();
         final StringBuilder strb = new StringBuilder(256);
         strb.append("Instance of ")
                 .append(c.getName())
