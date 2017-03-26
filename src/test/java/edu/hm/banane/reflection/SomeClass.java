@@ -1,16 +1,22 @@
 package edu.hm.banane.reflection;
 
-import java.io.*;
-import java.util.*;
+import java.util.Date;
 
-
+/**
+ * Irgendeine Klasse zum Testen.
+ */
 public class SomeClass {
 
-	@RenderMe private int foo;
-	@RenderMe(with="edu.hm.renderer.ArrayRenderer") int[] array = {1, 2, 3, };
-	@RenderMe private Date date = new Date(123456789);
+    private static final int SOME_NUMBS = 123456789;
+    @RenderMe private int foo;
+    @RenderMe(with = "edu.hm.banane.reflection.ArrayRenderer")private int[] array = {1, 2, };
+    @RenderMe private Date date = new Date(SOME_NUMBS);
 
-	public SomeClass(int foo) {
-		this.foo = foo;
-	} 
+    /**
+     * Erzeugt eine Klasse.
+     * @param foo der Wert
+     */
+    public SomeClass(int foo) {
+        this.foo = foo;
+    } 
 }

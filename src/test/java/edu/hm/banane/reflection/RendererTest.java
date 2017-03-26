@@ -4,23 +4,33 @@ import static org.junit.Assert.*;
 import org.junit.*;
 
 
+/**
+ * JUnit Testklasse fuer Renderer.
+ */
 public class RendererTest {
 
-	private SomeClass toRender;
-	private Renderer renderer;
+    private static final int SOME_NUMB = 5;
+    private SomeClass toRender;
+    private Renderer renderer;
 
-	@Before      
-	public void setUp() {
-		toRender = new SomeClass(5);
-		renderer = new Renderer(toRender);
-	}
+    /**
+     * 
+     */
+    @Before      
+    public void setUp() {
+        toRender = new SomeClass(SOME_NUMB);
+        renderer = new Renderer(toRender);
+    }
 
-	@Test      
-	public void testRendering() throws Exception {
+    /**
+     * @throws Exception wenn etwas schief geht
+     */
+    @Test      
+    public void testRendering() throws Exception {
         assertEquals("Instance of edu.hm.banane.reflection.SomeClass:\n"
-                        + "foo (Type int): 5\n"
-                        + "array (Type int[]): [1, 2, 3, ]\n"
-                        + "date (Type java.util.Date): Fri Jan 02 11:17:36 CET 1970\n"
-                , renderer.render());
+                + "foo (Type int): 5\n"
+                + "array (Type int[]): [1, 2, ]\n"
+                + "date (Type java.util.Date): Fri Jan 02 11:17:36 CET 1970\n",
+                renderer.render());
     }
 }
