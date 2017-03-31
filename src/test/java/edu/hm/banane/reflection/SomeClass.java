@@ -9,7 +9,7 @@ public class SomeClass {
 
     private static final int SOME_NUMBS = 123456789;
     @RenderMe private int foo;
-    @RenderMe(with = "edu.hm.banane.reflection.ArrayRenderer")private int[] array = {1, 2, };
+    @RenderMe(with = "edu.hm.banane.reflection.ArrayRenderer")private int[] array = {1, 2, 3};
     @RenderMe private Date date = new Date(SOME_NUMBS);
 
     /**
