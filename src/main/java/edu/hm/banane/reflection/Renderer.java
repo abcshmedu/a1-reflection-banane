@@ -22,7 +22,7 @@ public class Renderer {
     /**
      * Das Objekt, dessen Instanzvariablen ausgegeben werden sollen.
      */
-    private Object o;
+    private Object obj;
 
     /**
      * Erzeugt einen neuen Renderer.
@@ -30,7 +30,7 @@ public class Renderer {
      * @param object Das Objekt, dessen Instanzvariablen ausgegeben werden sollen.
      */
     public Renderer(Object object) {
-        this.o = object;
+        this.obj = object;
     }
 
     /**
@@ -41,11 +41,10 @@ public class Renderer {
      * Diese Methode darf keine Parameterliste haben.
      *
      * @param method Die jeweilige Methode
-     * @param object Objekt welches sich auf die Methode bezieht. Wird ignoriert bei einer static Methode
      * @return "Name (Rueckgabe Typ) Wert \n" von der Methode als String oder null
      * @throws ReflectiveOperationException wenn die Methode eine Parameterliste hat
      */
-    private static String handleMethod(Method method, Object object) throws ReflectiveOperationException {
+    private String handleMethod(Method method) throws ReflectiveOperationException {
         String renderer = getRender(method);
         if (renderer == null) {
             return null;
@@ -53,10 +52,10 @@ public class Renderer {
         String mName = method.getName();
         Class< ? > mRetType = method.getReturnType();
         method.setAccessible(true);
-        Object mValue = method.invoke(object);
+        Object mValue = method.invoke(obj);
         method.setAccessible(false);
         if (!renderer.isEmpty()) {
-            mValue = execCustomRenderer(renderer, mRetType, mValue);
+            mValue = execCustomRenderer(renderer, mValue);
         }
         return String.format(METHOD_STRF, mName, mRetType.getTypeName(), mValue);
     }
@@ -68,11 +67,10 @@ public class Renderer {
      * wird null zurueckgegeben.
      *
      * @param field Das jeweilige Feld
-     * @param object Objekt welches sich auf das Feld bezieht. Wird ignoriert bei einer static Feld
      * @return "Name (Typ) Wert \n" von dem Feld als String oder null
      * @throws ReflectiveOperationException wenn die ausgewaehlten Renderer Klasse nicht gefunden werden kann
      */
-    private static String handleField(Field field, Object object) throws ReflectiveOperationException {
+    private String handleField(Field field) throws ReflectiveOperationException {
         String renderer = getRender(field);
         if (renderer == null) {
             return null;
@@ -80,10 +78,10 @@ public class Renderer {
         String fName = field.getName();
         Class< ? > fType = field.getType();
         field.setAccessible(true);
-        Object fValue = field.get(object);
+        Object fValue = field.get(obj);
         field.setAccessible(false);
         if (!renderer.isEmpty()) {
-            fValue = execCustomRenderer(renderer, fType, fValue);
+            fValue = execCustomRenderer(renderer, fValue);
         }
         return String.format(FIELD_STRF, fName, fType.getTypeName(), fValue);
     }
@@ -107,16 +105,15 @@ public class Renderer {
      * und gibt dessen Rueckgabewert zurueck.
      *
      * @param customRender Der Name des spezieller Renderer
-     * @param type Typklasse des Parameters
-     * @param value der Wert des Parameters
+     * @param object Objekt welches render() uebergeben wird
      * @return Ruckgabewert der Methode render() der ausgewaehlten Renderer Klasse
      * @throws ReflectiveOperationException wenn keine passende Methode gefunden wurde
      */
-    private static String execCustomRenderer(String customRender, Class< ? > type, Object value) throws ReflectiveOperationException {
+    private static String execCustomRenderer(String customRender,  Object object) throws ReflectiveOperationException {
         Class< ? > renderer = Class.forName(customRender);
         Object objRenderer = renderer.newInstance();
-        Method render = renderer.getMethod(RENDERER_METHOD, type);
-        return (String) render.invoke(objRenderer, value);
+        Method render = renderer.getMethod(RENDERER_METHOD, object.getClass());
+        return (String) render.invoke(objRenderer, object);
     }
 
     /**
@@ -124,14 +121,14 @@ public class Renderer {
      * welche mit RenderMe gekennzeichnet worden sind.
      *
      * @return String.
-     * @throws ReflectiveOperationException, wenn was schief geht.
+     * @throws ReflectiveOperationException wenn was schief geht.
      */
     public String render() throws ReflectiveOperationException {
         final StringBuilder strb = new StringBuilder();
-        final Class<?> c = o.getClass();
+        final Class< ? > c = obj.getClass();
         strb.append(String.format(TITLE_STRF, c.getName()));
-        ThrowingFunction<Field, String> fieldFunction = field -> handleField(field, o);
-        ThrowingFunction<Method, String> methodFunction = method -> handleMethod(method, o);
+        ThrowingFunction<Field, String> fieldFunction = field -> handleField(field);
+        ThrowingFunction<Method, String> methodFunction = method -> handleMethod(method);
         Arrays.stream(c.getDeclaredFields())
                 .map(fieldFunction)
                 .filter(Objects::nonNull)
@@ -147,12 +144,12 @@ public class Renderer {
      * Functional Interface, wandelt CheckedExceptions in RuntimeExceptions um.
      *
      * @param <T> der Parameter-Typ der Funktion
-     * @param <R> der Rückgabewert-Typ der Funktion
+     * @param <R> der Rueckgabewert-Typ der Funktion
      */
     @FunctionalInterface
     public interface ThrowingFunction<T, R> extends Function<T, R> {
         /**
-         * Überschreibt die apply Methode, wandelt CheckedException in RuntimeException um.
+         * Ueberschreibt die apply Methode, wandelt CheckedException in RuntimeException um.
          *
          * @param t der Parameter der jeweilgen Funktion.
          * @return der Return-Wert der jeweiligen Funktion.
@@ -170,8 +167,8 @@ public class Renderer {
          * Die Methode, welche eine Exception wirft.
          *
          * @param elem der Parameter der jeweiligen Funktion.
-         * @return der Rückgabewert der jeweiligen Funktion.
-         * @throws Exception, falls was schief läuft.
+         * @return der Rueckgabewert der jeweiligen Funktion.
+         * @throws Exception falls was schief laeuft.
          */
         R applyThrows(T elem) throws Exception;
     }
