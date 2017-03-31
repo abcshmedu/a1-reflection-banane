@@ -121,9 +121,8 @@ public class Renderer {
      * welche mit RenderMe gekennzeichnet worden sind.
      *
      * @return String.
-     * @throws ReflectiveOperationException wenn was schief geht.
      */
-    public String render() throws ReflectiveOperationException {
+    public String render() {
         final StringBuilder strb = new StringBuilder();
         final Class< ? > c = obj.getClass();
         strb.append(String.format(TITLE_STRF, c.getName()));
@@ -172,5 +171,4 @@ public class Renderer {
          */
         R applyThrows(T elem) throws Exception;
     }
-
 }
