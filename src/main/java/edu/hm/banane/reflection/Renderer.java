@@ -3,6 +3,9 @@ package edu.hm.banane.reflection;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Die Render Klasse gibt mittels Reflection alle
@@ -31,40 +34,13 @@ public class Renderer {
     }
 
     /**
-     * Erzeugt einen String mit Name (Typ) Wert von allen Instanzvariblen eines Objektes,
-     * welche mit RenderMe gekennzeichnet worden sind.
-     *
-     * @return String.
-     * @throws ReflectiveOperationException 
-     */
-    public String render() throws ReflectiveOperationException {
-        final StringBuilder strb = new StringBuilder();
-        final Class< ? > c = o.getClass();
-        strb.append(String.format(TITLE_STRF, c.getName()));
-        for (Field field : c.getDeclaredFields()) {
-            String str = handleField(field, o);
-            if (str != null) {
-                strb.append(str);
-            }
-        }
-        for (Method method : c.getDeclaredMethods()) {
-            String str = handleMethod(method, o);
-            if (str != null) {
-                strb.append(str);
-            }
-        }
-        return strb.toString();
-    }
-
-
-    /**
      * Prueft ob eine Methode mit RenderMe deklariert worden ist und falls dies zutrifft
      * wird diese Methode aufgerufen. Wenn die Methode nicht mit RenderMe deklariert worden ist
      * wird null zurueckgegeben.
      * Nach dem Aufruf werden die gesamelten Informationen dann als String zurueckgegeben.
      * Diese Methode darf keine Parameterliste haben.
-     * 
-     * @param method Die Jeweilige Methode
+     *
+     * @param method Die jeweilige Methode
      * @param object Objekt welches sich auf die Methode bezieht. Wird ignoriert bei einer static Methode
      * @return "Name (Rueckgabe Typ) Wert \n" von der Methode als String oder null
      * @throws ReflectiveOperationException wenn die Methode eine Parameterliste hat
@@ -77,7 +53,7 @@ public class Renderer {
         String mName = method.getName();
         Class< ? > mRetType = method.getReturnType();
         method.setAccessible(true);
-        Object mValue = method.invoke(object, new Object[0]);
+        Object mValue = method.invoke(object);
         method.setAccessible(false);
         if (!renderer.isEmpty()) {
             mValue = execCustomRenderer(renderer, mRetType, mValue);
@@ -87,10 +63,10 @@ public class Renderer {
 
     /**
      * Prueft ob ein Feld mit RenderMe deklariert worden ist und falls dies zutrifft
-     * werden gesamelten Informationen ueber das Feld dann als String zurueckgegeben. 
+     * werden gesamelten Informationen ueber das Feld dann als String zurueckgegeben.
      * Wenn das Feld nicht mit RenderMe deklariert worden ist
      * wird null zurueckgegeben.
-     * 
+     *
      * @param field Das jeweilige Feld
      * @param object Objekt welches sich auf das Feld bezieht. Wird ignoriert bei einer static Feld
      * @return "Name (Typ) Wert \n" von dem Feld als String oder null
@@ -117,7 +93,7 @@ public class Renderer {
      * Ist das Element nicht deklariert wird null als Ergebnis geliefert.
      * Wurde kein spezieller Renderer mittels with Parameter bestimmt wird ein leerer String zurueckgegeben,
      * andernfalls wird der Name des spezieller Renderer zurueckgegeben.
-     * 
+     *
      * @param annotatedElement das zu pruefende Element
      * @return null, leerer String oder Name der Renderer Klasse
      */
@@ -129,7 +105,7 @@ public class Renderer {
     /**
      * Ruft dynamisch die Methode render() des definierten Renderer mit dem jeweiligen Parameter auf
      * und gibt dessen Rueckgabewert zurueck.
-     * 
+     *
      * @param customRender Der Name des spezieller Renderer
      * @param type Typklasse des Parameters
      * @param value der Wert des Parameters
@@ -141,6 +117,63 @@ public class Renderer {
         Object objRenderer = renderer.newInstance();
         Method render = renderer.getMethod(RENDERER_METHOD, type);
         return (String) render.invoke(objRenderer, value);
+    }
+
+    /**
+     * Erzeugt einen String mit "Name (Typ) Wert" von allen Instanzvariblen eines Objektes,
+     * welche mit RenderMe gekennzeichnet worden sind.
+     *
+     * @return String.
+     * @throws ReflectiveOperationException, wenn was schief geht.
+     */
+    public String render() throws ReflectiveOperationException {
+        final StringBuilder strb = new StringBuilder();
+        final Class<?> c = o.getClass();
+        strb.append(String.format(TITLE_STRF, c.getName()));
+        ThrowingFunction<Field, String> fieldFunction = field -> handleField(field, o);
+        ThrowingFunction<Method, String> methodFunction = method -> handleMethod(method, o);
+        Arrays.stream(c.getDeclaredFields())
+                .map(fieldFunction)
+                .filter(Objects::nonNull)
+                .forEach(strb::append);
+        Arrays.stream(c.getDeclaredMethods())
+                .map(methodFunction)
+                .filter(Objects::nonNull)
+                .forEach(strb::append);
+        return strb.toString();
+    }
+
+    /**
+     * Functional Interface, wandelt CheckedExceptions in RuntimeExceptions um.
+     *
+     * @param <T> der Parameter-Typ der Funktion
+     * @param <R> der Rückgabewert-Typ der Funktion
+     */
+    @FunctionalInterface
+    public interface ThrowingFunction<T, R> extends Function<T, R> {
+        /**
+         * Überschreibt die apply Methode, wandelt CheckedException in RuntimeException um.
+         *
+         * @param t der Parameter der jeweilgen Funktion.
+         * @return der Return-Wert der jeweiligen Funktion.
+         */
+        @Override
+        default R apply(T t) {
+            try {
+                return applyThrows(t);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        /**
+         * Die Methode, welche eine Exception wirft.
+         *
+         * @param elem der Parameter der jeweiligen Funktion.
+         * @return der Rückgabewert der jeweiligen Funktion.
+         * @throws Exception, falls was schief läuft.
+         */
+        R applyThrows(T elem) throws Exception;
     }
 
 }
