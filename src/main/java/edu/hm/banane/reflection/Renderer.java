@@ -11,6 +11,9 @@ import java.util.function.Function;
  * Die Render Klasse gibt mittels Reflection alle
  * Instanzvariablen eines Objektes aus, welche mit
  * der RenderMe-Annotation bezeichnet worden sind.
+ *
+ * @author Daniel Goller - Github: Deluxstreusalz
+ * @author Paul Masch - Github: pmasch@hm.edu
  */
 public class Renderer {
 
@@ -31,6 +34,36 @@ public class Renderer {
      */
     public Renderer(Object object) {
         this.obj = object;
+    }
+
+    /**
+     * Versucht bei einem Element welches mit RenderMe ggf. deklariert ist den Renderer zu bestimen.
+     * Ist das Element nicht deklariert wird null als Ergebnis geliefert.
+     * Wurde kein spezieller Renderer mittels with Parameter bestimmt wird ein leerer String zurueckgegeben,
+     * andernfalls wird der Name des spezieller Renderer zurueckgegeben.
+     *
+     * @param annotatedElement das zu pruefende Element
+     * @return null, leerer String oder Name der Renderer Klasse
+     */
+    private static String getRender(AnnotatedElement annotatedElement) {
+        RenderMe renderMe = annotatedElement.getAnnotation(RenderMe.class);
+        return renderMe == null ? null : renderMe.with();
+    }
+
+    /**
+     * Ruft dynamisch die Methode render() des definierten Renderer mit dem jeweiligen Parameter auf
+     * und gibt dessen Rueckgabewert zurueck.
+     *
+     * @param customRender Der Name des spezieller Renderer
+     * @param object       Objekt welches render() uebergeben wird
+     * @return Ruckgabewert der Methode render() der ausgewaehlten Renderer Klasse
+     * @throws ReflectiveOperationException wenn keine passende Methode gefunden wurde
+     */
+    private static String execCustomRenderer(String customRender, Object object) throws ReflectiveOperationException {
+        Class< ? > renderer = Class.forName(customRender);
+        Object objRenderer = renderer.newInstance();
+        Method render = renderer.getMethod(RENDERER_METHOD, object.getClass());
+        return (String) render.invoke(objRenderer, object);
     }
 
     /**
@@ -84,36 +117,6 @@ public class Renderer {
             fValue = execCustomRenderer(renderer, fValue);
         }
         return String.format(FIELD_STRF, fName, fType.getTypeName(), fValue);
-    }
-
-    /**
-     * Versucht bei einem Element welches mit RenderMe ggf. deklariert ist den Renderer zu bestimen.
-     * Ist das Element nicht deklariert wird null als Ergebnis geliefert.
-     * Wurde kein spezieller Renderer mittels with Parameter bestimmt wird ein leerer String zurueckgegeben,
-     * andernfalls wird der Name des spezieller Renderer zurueckgegeben.
-     *
-     * @param annotatedElement das zu pruefende Element
-     * @return null, leerer String oder Name der Renderer Klasse
-     */
-    private static String getRender(AnnotatedElement annotatedElement) {
-        RenderMe renderMe = annotatedElement.getAnnotation(RenderMe.class);
-        return renderMe == null ? null : renderMe.with();
-    }
-
-    /**
-     * Ruft dynamisch die Methode render() des definierten Renderer mit dem jeweiligen Parameter auf
-     * und gibt dessen Rueckgabewert zurueck.
-     *
-     * @param customRender Der Name des spezieller Renderer
-     * @param object Objekt welches render() uebergeben wird
-     * @return Ruckgabewert der Methode render() der ausgewaehlten Renderer Klasse
-     * @throws ReflectiveOperationException wenn keine passende Methode gefunden wurde
-     */
-    private static String execCustomRenderer(String customRender,  Object object) throws ReflectiveOperationException {
-        Class< ? > renderer = Class.forName(customRender);
-        Object objRenderer = renderer.newInstance();
-        Method render = renderer.getMethod(RENDERER_METHOD, object.getClass());
-        return (String) render.invoke(objRenderer, object);
     }
 
     /**

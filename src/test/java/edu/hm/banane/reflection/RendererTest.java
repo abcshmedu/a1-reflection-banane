@@ -52,12 +52,7 @@ public class RendererTest {
                                 "boolarray (Type java.lang.Boolean[]): [false, true, false, true, ]\n" +
                                 "floatarray (Type java.lang.Float[]): [1.0, 2.0, 4.0, ]\n" +
                                 "doublearry (Type java.lang.Double[]): [1.0, 3.0, 4.0, ]\n" +
-                                "testMe (Return Type void): null\n" +
-                                "testMe1 (Return Type int): 0\n" +
-                                "testMe2 (Return Type double): 1.0\n" +
-                                "testMe3 (Return Type float): 1.0\n" +
-                                "testMe4 (Return Type java.lang.Integer): 1\n" +
-                                "testMe5 (Return Type edu.hm.banane.reflection.SomeTestClass): edu.hm.banane.reflection.SomeTestClass@7a7b0070\n"
+                                "testMe1 (Return Type int): 0\n"
                 }
         });
     }

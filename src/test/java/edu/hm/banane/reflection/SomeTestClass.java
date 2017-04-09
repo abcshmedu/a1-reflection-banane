@@ -22,32 +22,7 @@ public class SomeTestClass {
     }
 
     @RenderMe
-    void testMe() {
-        System.out.println("Test func");
-    }
-
-    @RenderMe
     int testMe1() {
         return 0;
-    }
-
-    @RenderMe
-    double testMe2() {
-        return 1.0;
-    }
-
-    @RenderMe
-    float testMe3() {
-        return 1.f;
-    }
-
-    @RenderMe
-    Integer testMe4() {
-        return 1;
-    }
-
-    @RenderMe
-    SomeTestClass testMe5() {
-        return this;
     }
 }
